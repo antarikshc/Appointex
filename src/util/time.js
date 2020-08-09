@@ -3,7 +3,15 @@
  * @param {Date} date
  */
 function getStartOfDay(date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+/**
+ * Returns the 23:59 time of given date in Millis
+ * @param {Date} date
+ */
+function getEndOfDay(date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
 }
 
 /**
@@ -33,5 +41,6 @@ function generateSlots(date, config) {
 
 module.exports = {
   getStartOfDay,
+  getEndOfDay,
   generateSlots,
 };

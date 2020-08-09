@@ -23,7 +23,7 @@ export default class AppointmentController {
         .exists().withMessage('must not be null')
         .isInt().withMessage('must be a number')
         .custom((value) => {
-          const time = getStartOfDay(new Date());
+          const time = getStartOfDay(new Date()).getTime();
           if (value < time) {
             throw new Error('Provide future date');
           }
