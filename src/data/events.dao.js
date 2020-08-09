@@ -38,9 +38,24 @@ export default class EventsDao {
 
       events = snap.docs.map((item) => item.data());
     } catch (e) {
-      console.error(`getEvents : ${e.stack}`);
+      console.error(`getEventsForDay : ${e.stack}`);
     }
 
     return events;
+  }
+
+  /**
+   * Add event to DB
+   * @param {Object} event
+   * @returns {string?} ID of document
+   */
+  static async addEvent(event) {
+    try {
+      const result = await db.collection('events').add(event);
+      return result.id;
+    } catch (e) {
+      console.error(`addEvent : ${e.stack}`);
+      return null;
+    }
   }
 }
