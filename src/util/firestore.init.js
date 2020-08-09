@@ -4,7 +4,7 @@ const serviceAccount = require('../../appointex-firebase-adminsdk.json');
 
 let db;
 
-function getDatabase() {
+export default function getDatabase() {
   try {
     if (db) {
       return db;
@@ -23,5 +23,3 @@ function getDatabase() {
     return null;
   }
 }
-
-module.exports = { getDatabase };
