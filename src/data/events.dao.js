@@ -12,7 +12,7 @@ export default class EventsDao {
 
     try {
       const snap = await db.collection('events').get();
-      events = snap.docs.map((item) => item.data());
+      events = snap.docs.map((item) => this.dataToEvent(item.data()));
     } catch (e) {
       console.error(`getEvents : ${e.stack}`);
     }
@@ -36,7 +36,7 @@ export default class EventsDao {
         .where('startTime', '<=', end)
         .get();
 
-      events = snap.docs.map((item) => item.data());
+      events = snap.docs.map((item) => this.dataToEvent(item.data()));
     } catch (e) {
       console.error(`getEventsForDay : ${e.stack}`);
     }
@@ -57,5 +57,13 @@ export default class EventsDao {
       console.error(`addEvent : ${e.stack}`);
       return null;
     }
+  }
+
+  static dataToEvent(data) {
+    const event = data;
+    event.startTime = data.startTime.toMillis();
+    event.endTime = data.endTime.toMillis();
+
+    return event;
   }
 }
