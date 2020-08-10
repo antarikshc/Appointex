@@ -1,14 +1,15 @@
 import { Router } from 'express';
-import AppointmentCtrl from './appointment.controller';
+import Controller from './appointment.controller';
+import Validator from './appointment.validator';
 
 const router = new Router();
 
 router
   .route('/slots')
-  .get(AppointmentCtrl.validateGetAllSlots(), AppointmentCtrl.getAllSlots);
+  .get(Validator.getAllSlots(), Controller.getAllSlots);
 
 router
   .route('/book')
-  .post(AppointmentCtrl.validateBookAppointment(), AppointmentCtrl.bookAppointment);
+  .post(Validator.bookAppointment(), Controller.bookAppointment);
 
 export default router;
