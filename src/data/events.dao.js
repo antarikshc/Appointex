@@ -51,8 +51,13 @@ export default class EventsDao {
    */
   static async addEvent(event) {
     try {
-      const result = await db.collection('events').add(event);
-      return result.id;
+      const docRef = await db.collection('events').add(event);
+      const doc = await docRef.get();
+
+      const result = this.dataToEvent(doc.data());
+      result.id = doc.id;
+
+      return result;
     } catch (e) {
       console.error(`addEvent : ${e.stack}`);
       return null;
