@@ -1,4 +1,6 @@
+import { firestore } from 'firebase-admin';
 import * as config from './config';
+import Dao from '../data/events.dao';
 import { generateSlots } from '../util/time';
 
 const MINUTES_TO_MILLIS = 60 * 1000;
@@ -26,5 +28,24 @@ export default class AppointmentRepository {
 
         return { startTime, endTime };
       });
+  }
+
+  static async bookAppointment(data) {
+    const event = data;
+
+    let startInMillis = data.startTime;
+    let endInMillis = data.endTime;
+
+    if (data.timeZoneOffset) {
+      startInMillis -= data.timeZoneOffset * MINUTES_TO_MILLIS;
+      endInMillis -= data.timeZoneOffset * MINUTES_TO_MILLIS;
+    }
+
+    event.startTime = firestore.Timestamp.fromMillis(startInMillis);
+    event.endTime = firestore.Timestamp.fromMillis(endInMillis);
+
+    const result = await Dao.addEvent(event);
+
+    return result;
   }
 }
