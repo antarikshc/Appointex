@@ -44,6 +44,39 @@ export default class EventsDao {
     return events;
   }
 
+  static async checkEventCollision(startTime, endTime, timeZoneOffset) {
+    try {
+      let startInMillis = startTime;
+      let endInMillis = endTime;
+
+      if (timeZoneOffset) {
+        startInMillis -= timeZoneOffset * (60 * 1000);
+        endInMillis -= timeZoneOffset * (60 * 1000);
+      }
+
+      const start = new Date(startInMillis);
+      const end = new Date(endInMillis);
+
+      const startCollisonQuery = await db.collection('events')
+        .where('startTime', '>=', start)
+        .where('startTime', '<', end)
+        .get();
+
+      const endCollisonQuery = await db.collection('events')
+        .where('endTime', '>', start)
+        .where('endTime', '<=', end)
+        .get();
+
+      if (startCollisonQuery.docs.length > 0 || endCollisonQuery.docs.length > 0) {
+        return true;
+      }
+    } catch (e) {
+      console.error(`checkEventCollision : ${e.stack}`);
+    }
+
+    return false;
+  }
+
   /**
    * Add event to DB
    * @param {Object} event
@@ -51,7 +84,9 @@ export default class EventsDao {
    */
   static async addEvent(event) {
     try {
-      const docRef = await db.collection('events').add(event);
+      const item = event;
+      delete item.timeZoneOffset;
+      const docRef = await db.collection('events').add(item);
       const doc = await docRef.get();
 
       const result = this.dataToEvent(doc.data());
