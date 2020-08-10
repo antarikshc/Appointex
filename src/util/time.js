@@ -24,7 +24,7 @@ function generateSlots(date, config) {
   const slots = [];
   const millis = 60 * 1000;
 
-  const prefix = getStartOfDay(date);
+  const prefix = getStartOfDay(date).getTime();
 
   for (
     let start = config.clockIn;
