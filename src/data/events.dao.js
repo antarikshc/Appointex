@@ -1,5 +1,6 @@
 import getDatabase from '../util/firestore.init';
 import { getStartOfDay, getEndOfDay } from '../util/time';
+import { removeDuplicates, compareEvents } from '../util/arrays';
 
 const db = getDatabase();
 
@@ -28,15 +29,24 @@ export default class EventsDao {
     let events = [];
 
     try {
-      const start = getStartOfDay(date);
       const end = getEndOfDay(date);
 
-      const snap = await db.collection('events')
-        .where('startTime', '>=', start)
+      const startTimeQuery = await db.collection('events')
+        .where('startTime', '>=', date)
         .where('startTime', '<=', end)
+        .orderBy('startTime')
         .get();
 
-      events = snap.docs.map((item) => this.dataToEvent(item.data()));
+      const endTimeQuery = await db.collection('events')
+        .where('endTime', '>=', date)
+        .where('endTime', '<=', end)
+        // .orderBy('startTime')
+        .get();
+
+      // Sort endTime array because Firestore doesn't support orderBy for different fields
+      endTimeQuery.docs.sort(compareEvents);
+
+      events = removeDuplicates(startTimeQuery.docs, endTimeQuery.docs);
     } catch (e) {
       console.error(`getEventsForDay : ${e.stack}`);
     }
@@ -101,7 +111,7 @@ export default class EventsDao {
       if (
         startCollisonQuery.docs.length > 0 ||
         endCollisonQuery.docs.length > 0 ||
-        startEndCollisonDocs.docs.length > 0
+        startEndCollisonDocs.length > 0
       ) {
         return true;
       }
