@@ -6,7 +6,7 @@ const router = new Router();
 
 router
   .route('/slots')
-  .get(Validator.getAllSlots(), Controller.getAllSlots);
+  .get(Validator.getAllSlots(), Controller.getAvailableSlots);
 
 router
   .route('/book')
