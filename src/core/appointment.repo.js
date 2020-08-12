@@ -65,6 +65,7 @@ export default class AppointmentRepository {
 
   static removeBookedSlots(date, slots, events) {
     if (events.length === 0) return slots;
+
     const result = [];
 
     let i = 0;
@@ -72,9 +73,11 @@ export default class AppointmentRepository {
     while (i < slots.length && j < events.length) {
       const slot = slots[i];
       const event = events[j];
+
       if (slot.startTime >= date.getTime()) {
         const eventStart = event.startTime.toMillis();
         const eventEnd = event.endTime.toMillis();
+
         if (
           (eventStart <= slot.startTime && slot.endTime <= eventEnd) ||
           (slot.startTime <= eventStart && eventStart < slot.endTime) ||

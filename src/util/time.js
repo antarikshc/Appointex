@@ -39,8 +39,16 @@ function generateSlots(date, config) {
   return slots;
 }
 
+function convertUtc(time, timeZoneOffset) {
+  if (timeZoneOffset) {
+    return time + (timeZoneOffset * 60 * 1000);
+  }
+  return time;
+}
+
 module.exports = {
   getStartOfDay,
   getEndOfDay,
   generateSlots,
+  convertUtc,
 };
