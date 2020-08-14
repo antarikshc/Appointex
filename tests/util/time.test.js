@@ -41,3 +41,11 @@ test('should convert to UTC given millis and timezone offset', () => {
 test('should return same time given time in UTC', () => {
   expect(time.convertUtc(1597397400000)).toBe(1597397400000);
 });
+
+test('should convert timezone given millis and timezone offset', () => {
+  expect(time.convertTimeZone(1597375800000, 390)).toBe(1597399200000);
+});
+
+test('should return same time given time in same timezone', () => {
+  expect(time.convertTimeZone(1597375800000)).toBe(1597375800000);
+});

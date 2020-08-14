@@ -46,9 +46,17 @@ function convertUtc(time, timeZoneOffset) {
   return time;
 }
 
+function convertTimeZone(time, timeZoneOffset) {
+  if (timeZoneOffset) {
+    return time + (timeZoneOffset * 60 * 1000);
+  }
+  return time;
+}
+
 module.exports = {
   getStartOfDay,
   getEndOfDay,
   generateSlots,
   convertUtc,
+  convertTimeZone,
 };
