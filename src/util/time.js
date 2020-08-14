@@ -41,7 +41,7 @@ function generateSlots(date, config) {
 
 function convertUtc(time, timeZoneOffset) {
   if (timeZoneOffset) {
-    return time + (timeZoneOffset * 60 * 1000);
+    return time - (timeZoneOffset * 60 * 1000);
   }
   return time;
 }

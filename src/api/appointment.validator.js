@@ -58,8 +58,8 @@ export default class AppointmentValidator {
     const endUtc = convertUtc(item.endTime, item.timeZoneOffset);
 
     const prefix = getStartOfDay(new Date(item.startTime)).getTime();
-    const configStart = prefix + (config.clockIn * 60 * 1000);
-    const configEnd = prefix + (config.clockOut * 60 * 1000);
+    const configStart = convertUtc(prefix + (config.clockIn * 60 * 1000), config.timeZoneOffset);
+    const configEnd = convertUtc(prefix + (config.clockOut * 60 * 1000), config.timeZoneOffset);
 
     if (startUtc < configStart || endUtc > configEnd) {
       throw new Error('No slot available');
