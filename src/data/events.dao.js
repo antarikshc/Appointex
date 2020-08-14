@@ -56,23 +56,15 @@ export default class EventsDao {
 
   /**
    * Queries events which might collide with the timings given
-   * @param {number} startTime in millis
-   * @param {number} endTime in millis
+   * @param {number} startTime in millis UTC
+   * @param {number} endTime in millis UTC
    * @param {number} timeZoneOffset in minutes
    * @returns {Boolean} to indicate whether collision occurs
    */
-  static async checkEventCollision(startTime, endTime, timeZoneOffset) {
+  static async checkEventCollision(startTime, endTime) {
     try {
-      let startInMillis = startTime;
-      let endInMillis = endTime;
-
-      if (timeZoneOffset) {
-        startInMillis -= timeZoneOffset * (60 * 1000);
-        endInMillis -= timeZoneOffset * (60 * 1000);
-      }
-
-      const start = new Date(startInMillis);
-      const end = new Date(endInMillis);
+      const start = new Date(startTime);
+      const end = new Date(endTime);
 
       // There are 4 possibilities
       // Intended booking:           |------------|
@@ -102,7 +94,7 @@ export default class EventsDao {
         .get();
 
       const startEndCollisonDocs = startEndCollisonQuery.docs.filter((doc) => {
-        if (doc.data().endTime.toMillis() > endInMillis) {
+        if (doc.data().endTime.toMillis() > endTime) {
           return true;
         }
         return false;

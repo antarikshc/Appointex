@@ -1,7 +1,7 @@
 import { firestore } from 'firebase-admin';
 import * as config from './config';
 import Dao from '../data/events.dao';
-import { generateSlots } from '../util/time';
+import { generateSlots, convertUtc, convertTimeZone } from '../util/time';
 
 const MINUTES_TO_MILLIS = 60 * 1000;
 
@@ -15,15 +15,10 @@ export default class AppointmentRepository {
    */
   static async getAvailableSlots(time, timeZoneOffset) {
     // Doctor's slots in UTC for entire day
-    const slots = generateSlots(new Date(time), config).map((item) => {
-      let { startTime, endTime } = item;
-
-      // convert to UTC
-      startTime = item.startTime - (config.timeZoneOffset * MINUTES_TO_MILLIS);
-      endTime = item.endTime - (config.timeZoneOffset * MINUTES_TO_MILLIS);
-
-      return { startTime, endTime };
-    });
+    const slots = generateSlots(new Date(time), config).map((item) => ({
+      startTime: convertUtc(item.startTime, config.timeZoneOffset * MINUTES_TO_MILLIS),
+      endTime: convertUtc(item.endTime, config.timeZoneOffset * MINUTES_TO_MILLIS),
+    }));
 
     const dateUtc = new Date(time - (timeZoneOffset * MINUTES_TO_MILLIS));
 
@@ -31,15 +26,10 @@ export default class AppointmentRepository {
     const events = await Dao.getEventsForDay(new Date(time));
 
     // Filter available slots and map to user's timezone
-    const available = this.removeBookedSlots(dateUtc, slots, events).map((item) => {
-      let { startTime, endTime } = item;
-
-      // convert to user's requested timeZone
-      startTime += timeZoneOffset * MINUTES_TO_MILLIS;
-      endTime += timeZoneOffset * MINUTES_TO_MILLIS;
-
-      return { startTime, endTime };
-    });
+    const available = this.removeBookedSlots(dateUtc, slots, events).map((item) => ({
+      startTime: convertTimeZone(item.startTime, timeZoneOffset * MINUTES_TO_MILLIS),
+      endTime: convertTimeZone(item.endTime, timeZoneOffset * MINUTES_TO_MILLIS),
+    }));
 
     return available;
   }
@@ -47,13 +37,8 @@ export default class AppointmentRepository {
   static async bookAppointment(data) {
     const event = data;
 
-    let startInMillis = data.startTime;
-    let endInMillis = data.endTime;
-
-    if (data.timeZoneOffset) {
-      startInMillis -= data.timeZoneOffset * MINUTES_TO_MILLIS;
-      endInMillis -= data.timeZoneOffset * MINUTES_TO_MILLIS;
-    }
+    const startInMillis = convertUtc(data.startTime, data.timeZoneOffset * MINUTES_TO_MILLIS);
+    const endInMillis = convertUtc(data.endTime, data.timeZoneOffset * MINUTES_TO_MILLIS);
 
     event.startTime = firestore.Timestamp.fromMillis(startInMillis);
     event.endTime = firestore.Timestamp.fromMillis(endInMillis);

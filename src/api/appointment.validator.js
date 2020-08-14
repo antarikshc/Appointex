@@ -66,9 +66,8 @@ export default class AppointmentValidator {
     }
 
     const collision = await Dao.checkEventCollision(
-      item.startTime,
-      item.endTime,
-      item.timeZoneOffset,
+      convertUtc(item.startTime, item.timeZoneOffset),
+      convertUtc(item.endTime, item.timeZoneOffset),
     );
     if (collision) {
       throw new Error('The time slot is already booked');
