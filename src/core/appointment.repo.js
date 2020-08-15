@@ -3,8 +3,6 @@ import * as config from './config';
 import Dao from '../data/events.dao';
 import { generateSlots, convertUtc, convertTimeZone } from '../util/time';
 
-const MINUTES_TO_MILLIS = 60 * 1000;
-
 export default class AppointmentRepository {
   /**
    * Returns all the available slots within config bounds
@@ -16,19 +14,19 @@ export default class AppointmentRepository {
   static async getAvailableSlots(time, timeZoneOffset) {
     // Doctor's slots in UTC for entire day
     const slots = generateSlots(new Date(time), config).map((item) => ({
-      startTime: convertUtc(item.startTime, config.timeZoneOffset * MINUTES_TO_MILLIS),
-      endTime: convertUtc(item.endTime, config.timeZoneOffset * MINUTES_TO_MILLIS),
+      startTime: convertUtc(item.startTime, config.timeZoneOffset),
+      endTime: convertUtc(item.endTime, config.timeZoneOffset),
     }));
 
-    const dateUtc = new Date(time - (timeZoneOffset * MINUTES_TO_MILLIS));
+    const dateUtc = new Date(convertUtc(time, timeZoneOffset));
 
     // Get booked events for rest of the day
     const events = await Dao.getEventsForDay(new Date(time));
 
     // Filter available slots and map to user's timezone
     const available = this.removeBookedSlots(dateUtc, slots, events).map((item) => ({
-      startTime: convertTimeZone(item.startTime, timeZoneOffset * MINUTES_TO_MILLIS),
-      endTime: convertTimeZone(item.endTime, timeZoneOffset * MINUTES_TO_MILLIS),
+      startTime: convertTimeZone(item.startTime, timeZoneOffset),
+      endTime: convertTimeZone(item.endTime, timeZoneOffset),
     }));
 
     return available;
@@ -37,8 +35,8 @@ export default class AppointmentRepository {
   static async bookAppointment(data) {
     const event = data;
 
-    const startInMillis = convertUtc(data.startTime, data.timeZoneOffset * MINUTES_TO_MILLIS);
-    const endInMillis = convertUtc(data.endTime, data.timeZoneOffset * MINUTES_TO_MILLIS);
+    const startInMillis = convertUtc(data.startTime, data.timeZoneOffset);
+    const endInMillis = convertUtc(data.endTime, data.timeZoneOffset);
 
     event.startTime = firestore.Timestamp.fromMillis(startInMillis);
     event.endTime = firestore.Timestamp.fromMillis(endInMillis);
@@ -58,24 +56,32 @@ export default class AppointmentRepository {
     while (i < slots.length && j < events.length) {
       const slot = slots[i];
       const event = events[j];
+      const eventStart = event.startTime.toMillis();
+      const eventEnd = event.endTime.toMillis();
 
-      if (slot.startTime >= date.getTime()) {
-        const eventStart = event.startTime.toMillis();
-        const eventEnd = event.endTime.toMillis();
-
-        if (
-          (eventStart <= slot.startTime && slot.endTime <= eventEnd) ||
-          (slot.startTime <= eventStart && eventStart < slot.endTime) ||
-          (slot.startTime < eventEnd && eventEnd <= slot.endTime)
-        ) {
-          let k = i + 1;
-          while (slots[k].startTime < event.endTime) k += 1;
-          i = k;
-          j += 1;
-        } else {
-          result.push(slot);
+      if (eventStart < slot.startTime && eventEnd <= slot.startTime) {
+        j += 1;
+      } else {
+        if (slot.startTime >= date.getTime()) {
+          if (
+            (eventStart <= slot.startTime && slot.endTime <= eventEnd) ||
+            (slot.startTime <= eventStart && eventStart < slot.endTime) ||
+            (slot.startTime < eventEnd && eventEnd <= slot.endTime)
+          ) {
+            let k = i + 1;
+            while (slots[k].startTime < event.endTime && k < slots.length) k += 1;
+            i = k - 1;
+            j += 1;
+          } else {
+            result.push(slot);
+          }
         }
+        i += 1;
       }
+    }
+
+    while (i < slots.length) {
+      result.push(slots[i]);
       i += 1;
     }
 

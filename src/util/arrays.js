@@ -28,13 +28,13 @@ function removeDuplicates(arrayOne, arrayTwo) {
   }
 
   while (i < arrayOne.length) {
-    i += 1;
     result.push(arrayOne[i].data());
+    i += 1;
   }
 
   while (j < arrayTwo.length) {
-    j += 1;
     result.push(arrayTwo[j].data());
+    j += 1;
   }
 
   return result;
