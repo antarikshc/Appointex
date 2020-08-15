@@ -46,7 +46,10 @@ export default class EventsDao {
       // Sort endTime array because Firestore doesn't support orderBy for different fields
       endTimeQuery.docs.sort(compareEvents);
 
-      events = removeDuplicates(startTimeQuery.docs, endTimeQuery.docs);
+      events = removeDuplicates(
+        startTimeQuery ? startTimeQuery.docs : [],
+        endTimeQuery ? endTimeQuery.docs : [],
+      );
     } catch (e) {
       console.error(`getEventsForDay : ${e.stack}`);
     }
