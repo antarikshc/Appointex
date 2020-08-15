@@ -1,3 +1,4 @@
+import { firestore } from 'firebase-admin';
 import getDatabase from '../util/firestore.init';
 import { getStartOfDay, getEndOfDay } from '../util/time';
 import { removeDuplicates, compareEvents } from '../util/arrays';
@@ -126,7 +127,12 @@ export default class EventsDao {
   static async addEvent(event) {
     try {
       const item = event;
+
+      // Make data firestore compliant
+      item.startTime = firestore.Timestamp.fromMillis(item.startTime);
+      item.endTime = firestore.Timestamp.fromMillis(item.endTime);
       delete item.timeZoneOffset;
+
       const docRef = await db.collection('events').add(item);
       const doc = await docRef.get();
 
@@ -140,6 +146,7 @@ export default class EventsDao {
     }
   }
 
+  // Util method
   static dataToEvent(data) {
     const event = data;
     event.startTime = data.startTime.toMillis();

@@ -3,6 +3,7 @@ import { validationResult } from 'express-validator';
 import Repository from '../core/appointment.repo';
 
 export default class AppointmentController {
+  // Controller for GET /appointment/slots
   static async getAvailableSlots(req, res, next) {
     try {
       const errors = validationResult(req);
@@ -19,6 +20,7 @@ export default class AppointmentController {
     }
   }
 
+  // Controller for POST /appointment/book
   static async bookAppointment(req, res, next) {
     try {
       const errors = validationResult(req);

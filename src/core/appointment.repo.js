@@ -1,11 +1,10 @@
-import { firestore } from 'firebase-admin';
 import * as config from './config';
 import Dao from '../data/events.dao';
 import { generateSlots, convertUtc, convertTimeZone } from '../util/time';
 
 export default class AppointmentRepository {
   /**
-   * Returns all the available slots within config bounds
+   * Generates all the available slots within config bounds
    * @param {Number} time in millis
    * @param {Minutes} timeZoneOffset in minutes
    *
@@ -32,20 +31,27 @@ export default class AppointmentRepository {
     return available;
   }
 
+  /**
+   * Books an Appointment and returns the UUID
+   * @param {Event} data Event Object
+   */
   static async bookAppointment(data) {
     const event = data;
 
-    const startInMillis = convertUtc(data.startTime, data.timeZoneOffset);
-    const endInMillis = convertUtc(data.endTime, data.timeZoneOffset);
-
-    event.startTime = firestore.Timestamp.fromMillis(startInMillis);
-    event.endTime = firestore.Timestamp.fromMillis(endInMillis);
+    event.startTime = convertUtc(data.startTime, data.timeZoneOffset);
+    event.endTime = convertUtc(data.endTime, data.timeZoneOffset);
 
     const result = await Dao.addEvent(event);
 
     return result;
   }
 
+  /**
+   * Util method for Filtering booked slots
+   * @param {Date} date
+   * @param { { startTime, endTime }[] } slots
+   * @param { Event[] } events
+   */
   static removeBookedSlots(date, slots, events) {
     if (events.length === 0) return slots;
 
