@@ -8,7 +8,7 @@ test('should generate available slots from given time onwards', async () => {
   expect.assertions(1);
 
   // Mock required Dao methods
-  jest.spyOn(Dao, 'getEventsForDay').mockResolvedValueOnce([
+  Dao.getEventsForDay = jest.fn().mockReturnValue([
     {
       name: 'Event 1',
       startTime: firestore.Timestamp.fromMillis(1597352400000), // 2020/08/14 08:00 IST
@@ -45,5 +45,3 @@ test('should generate available slots from given time onwards', async () => {
   const actual = await Repo.getAvailableSlots(1597379400000, 330);
   expect(actual).toEqual(slots);
 });
-
-afterAll(() => jest.resetAllMocks());
