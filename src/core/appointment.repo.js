@@ -36,14 +36,17 @@ export default class AppointmentRepository {
    * @param {Event} data Event Object
    */
   static async bookAppointment(data) {
-    const event = data;
+    if (data) {
+      const event = data;
 
-    event.startTime = convertUtc(data.startTime, data.timeZoneOffset);
-    event.endTime = convertUtc(data.endTime, data.timeZoneOffset);
+      event.startTime = convertUtc(data.startTime, data.timeZoneOffset);
+      event.endTime = convertUtc(data.endTime, data.timeZoneOffset);
 
-    const result = await Dao.addEvent(event);
+      const result = await Dao.addEvent(event);
 
-    return result;
+      return result;
+    }
+    return null;
   }
 
   /**
