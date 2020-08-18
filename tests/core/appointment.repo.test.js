@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
 
 import { firestore } from 'firebase-admin';
+import { v4 as uuid } from 'uuid';
 import Repo from '../../src/core/appointment.repo';
 import Dao from '../../src/data/events.dao';
 
@@ -8,7 +9,7 @@ test('should generate available slots from given time onwards', async () => {
   expect.assertions(1);
 
   // Mock required Dao methods
-  jest.spyOn(Dao, 'getEventsForDay').mockResolvedValueOnce([
+  Dao.getEventsForDay = jest.fn().mockReturnValue([
     {
       name: 'Event 1',
       startTime: firestore.Timestamp.fromMillis(1597352400000), // 2020/08/14 08:00 IST
@@ -46,4 +47,53 @@ test('should generate available slots from given time onwards', async () => {
   expect(actual).toEqual(slots);
 });
 
-afterAll(() => jest.resetAllMocks());
+test('should return empty array given out of bounds time', async () => {
+  expect.assertions(1);
+
+  // Mock required Dao methods
+  Dao.getEventsForDay = jest.fn().mockReturnValue([]);
+
+  const actual = await Repo.getAvailableSlots(1597413600000, 330);
+  expect(actual).toEqual([]);
+});
+
+test('should convert time to UTC & add event when provided data in diff timezone', async () => {
+  expect.assertions(1);
+
+  const id = uuid();
+
+  // Mock Dao method
+  Dao.addEvent = jest.fn().mockImplementation(async (data) => {
+    const item = data;
+    item.id = id;
+    delete item.timeZoneOffset;
+    return item;
+  });
+
+  const data = {
+    name: 'Event 1',
+    startTime: 1597381200000,
+    endTime: 1597383000000,
+    timeZoneOffset: 330, // IST
+  };
+
+  const expected = {
+    id,
+    name: data.name,
+    startTime: 1597361400000, // UTC
+    endTime: 1597363200000, // UTC
+  };
+
+  const actual = await Repo.bookAppointment(data);
+  expect(actual).toStrictEqual(expected);
+});
+
+test('should return null when given bad params to book appointment', async () => {
+  expect.assertions(1);
+
+  // Mock Dao method
+  Dao.addEvent = jest.fn().mockImplementation(async (data) => data);
+
+  const actual = await Repo.bookAppointment(null);
+  expect(actual).toBeFalsy();
+});
