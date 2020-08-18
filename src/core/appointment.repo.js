@@ -17,13 +17,13 @@ export default class AppointmentRepository {
       endTime: convertUtc(item.endTime, config.timeZoneOffset),
     }));
 
-    const dateUtc = new Date(convertUtc(time, timeZoneOffset));
+    const timeUtc = convertUtc(time, timeZoneOffset);
 
     // Get booked events for rest of the day
     const events = await Dao.getEventsForDay(new Date(time));
 
     // Filter available slots and map to user's timezone
-    const available = this.removeBookedSlots(dateUtc, slots, events).map((item) => ({
+    const available = this.removeBookedSlots(timeUtc, slots, events).map((item) => ({
       startTime: convertTimeZone(item.startTime, timeZoneOffset),
       endTime: convertTimeZone(item.endTime, timeZoneOffset),
     }));
@@ -51,13 +51,11 @@ export default class AppointmentRepository {
 
   /**
    * Util method for Filtering booked slots
-   * @param {Date} date
+   * @param {Number} time Lower bound
    * @param { { startTime, endTime }[] } slots
    * @param { Event[] } events
    */
-  static removeBookedSlots(date, slots, events) {
-    if (events.length === 0) return slots;
-
+  static removeBookedSlots(time, slots, events) {
     const result = [];
 
     let i = 0;
@@ -71,7 +69,7 @@ export default class AppointmentRepository {
       if (eventStart < slot.startTime && eventEnd <= slot.startTime) {
         j += 1;
       } else {
-        if (slot.startTime >= date.getTime()) {
+        if (slot.startTime >= time) {
           if (
             (eventStart <= slot.startTime && slot.endTime <= eventEnd) ||
             (slot.startTime <= eventStart && eventStart < slot.endTime) ||
@@ -90,7 +88,9 @@ export default class AppointmentRepository {
     }
 
     while (i < slots.length) {
-      result.push(slots[i]);
+      if (slots[i].startTime >= time) {
+        result.push(slots[i]);
+      }
       i += 1;
     }
 
