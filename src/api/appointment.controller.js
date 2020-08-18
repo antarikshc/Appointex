@@ -13,6 +13,10 @@ export default class AppointmentController {
 
       const slots = await Repository.getAvailableSlots(req.body.date, req.body.timeZoneOffset);
 
+      if (slots.length === 0) {
+        return res.status(400).json({ error: 'No slots available' });
+      }
+
       return res.status(200).json(slots);
     } catch (e) {
       console.error(e.stack);
@@ -29,6 +33,10 @@ export default class AppointmentController {
       }
 
       const result = await Repository.bookAppointment(req.body);
+
+      if (!result) {
+        return res.status(400).json({ error: 'Couldn\'t book appointment' });
+      }
 
       return res.status(200).json(result);
     } catch (e) {
