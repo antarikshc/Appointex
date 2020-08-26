@@ -8,6 +8,8 @@ const db = getDatabase();
 export default class EventsDao {
   /**
    * Queries all the events from DB
+   *
+   * @returns {Event[]} Array of Events
    */
   static async getEvents() {
     let events = [];
@@ -25,21 +27,33 @@ export default class EventsDao {
   /**
    * Queries all events for Single day
    * @param {Date} date
+   *
+   * @returns {Event[]} Array of Events
    */
   static async getEventsForDay(date) {
+    const end = getEndOfDay(date);
+    return this.getEventsWithBounds(date, end);
+  }
+
+  /**
+   * Queries events within start and end dates
+   * @param {Date} start
+   * @param {Date} end
+   *
+   * @returns {Event[]} Array of Events
+   */
+  static async getEventsWithBounds(start, end) {
     let events = [];
 
     try {
-      const end = getEndOfDay(date);
-
       const startTimeQuery = await db.collection('events')
-        .where('startTime', '>=', date)
+        .where('startTime', '>=', start)
         .where('startTime', '<=', end)
         .orderBy('startTime')
         .get();
 
       const endTimeQuery = await db.collection('events')
-        .where('endTime', '>=', date)
+        .where('endTime', '>=', start)
         .where('endTime', '<=', end)
         // .orderBy('startTime')
         .get();
@@ -52,7 +66,7 @@ export default class EventsDao {
         endTimeQuery ? endTimeQuery.docs : [],
       );
     } catch (e) {
-      console.error(`getEventsForDay : ${e.stack}`);
+      console.error(`getEventsWithBounds : ${e.stack}`);
     }
 
     return events;
@@ -62,7 +76,7 @@ export default class EventsDao {
    * Queries events which might collide with the timings given
    * @param {number} startTime in millis UTC
    * @param {number} endTime in millis UTC
-   * @param {number} timeZoneOffset in minutes
+   *
    * @returns {Boolean} to indicate whether collision occurs
    */
   static async checkEventCollision(startTime, endTime) {
