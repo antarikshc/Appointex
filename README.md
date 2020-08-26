@@ -11,6 +11,19 @@ Making appointment booking between people a lot easier
 
 ## Running the project
 
+Set your default config at `src/core/config.js`
+
+OR
+
+In your .env file:
+
+    CONFIG_CLOCK_IN = 540
+    CONFIG_CLOCK_OUT = 1020
+    CONFIG_DURATION = 30
+    CONFIG_TIME_ZONE = 330
+
+Start project
+
     $ npm start
 
 ## Running Tests
@@ -33,6 +46,16 @@ Books an appointment for the given start and end time
 
     {
         "name" : "John Doe",
+        "startTime" : 1597375800000, // start time in milliseconds
+        "endTime" : 1597377600000,  // end time in milliseconds
+        "timeZoneOffset" : 330  // (optional) local timezone in minutes, default UTC
+    }
+
+
+### GET /event
+Return all the events between given startTime & endTime
+
+    {
         "startTime" : 1597375800000, // start time in milliseconds
         "endTime" : 1597377600000,  // end time in milliseconds
         "timeZoneOffset" : 330  // (optional) local timezone in minutes, default UTC
